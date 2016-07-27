@@ -1,0 +1,59 @@
+{
+  "name": "hubot-ibmcloud-auth",
+  "version": "0.0.14",
+  "description": "IBM Cloud bot authorization and white listing",
+  "main": "index.js",
+  "respository": {
+    "url": "https://github.com/ibm-cloud-solutions/hubot-ibmcloud-auth",
+    "type": "git"
+  },
+  "publishConfig": {
+    "registry": "http://bot-npm.ng.bluemix.net"
+  },
+  "scripts": {
+    "start": "source config/env && hubot -a shell",
+    "slack": "source config/env && hubot -a slack",
+    "lint": "eslint src/**/*.js test/*.js index.js",
+    "test": ". test/.env && mocha test",
+    "coverage": ". test/.env && istanbul cover -x '**/coverage/**' -x index.js -x '**/tools/**' --include-all-sources --report lcov --report cobertura --report text --dir ./gh-pages/coverage _mocha -- test",
+    "release": "node tools/publish"
+  },
+  "keywords": [
+    "hubot",
+    "hubot-scripts",
+    "bluemix",
+    "cloud",
+    "slack"
+  ],
+  "author": "ibm-cloud-solutions",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "coffee-script": "^1.10.0",
+    "eslint": "^2.9.0",
+    "eslint-config-strongloop": "^2.0.1",
+    "hubot": "^2.19.0",
+    "hubot-test-helper": "^1.4.4",
+    "istanbul": "^0.4.0",
+    "istanbul-cobertura-badger": "^1.2.1",
+    "mocha": "^2.4.5",
+    "rewire": "^2.5.1",
+    "shelljs": "^0.7.0"
+  },
+  "peerDependencies": {
+    "hubot": "^2.19.0"
+  },
+  "engines": {
+    "node": ">= 4.2.0"
+  },
+  "files": [
+    "src",
+    "index.js"
+  ],
+  "dependencies": {
+    "i18n": "^0.8.2",
+    "lodash": "^4.13.1",
+    "fs": "0.0.2",
+    "path": "^0.12.7"
+  }
+}
