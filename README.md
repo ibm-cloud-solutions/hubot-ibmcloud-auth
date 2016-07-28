@@ -14,7 +14,7 @@ Script package that provides simple whitelist access to commands in hubot script
 * [License](#license)
 * [Contribute](#contribute)
 
-## Usage <a id="usage"></a>
+## Usage
 
 Steps for adding this to your hubot:
 
@@ -30,7 +30,7 @@ HUBOT_IBMCLOUD_AUTHENTICATION_DISABLED=<only if desired, disables authentication
 5. This package will always be used with hubot-bluemix so you'll want to follow all instructions for setting up hubot-bluemix as well.
 6. Start up your bot & off to the races!
 
-## Access <a id="access"></a>
+## Access
 
 Reader-level users have access to the following operations:
 - list apps
@@ -78,9 +78,9 @@ Power-level users have access to the following operations:
 
 If a command is not listed, all users have access.
 
-## Development <a id="development"></a>
+## Development
 
-Please refer to the [CONTRIBUTING.md](./CONTRIBUTING.md) before starting any work.  Steps for running this script for development purposes:
+Please refer to the [CONTRIBUTING.md](https://github.com/ibm-cloud-solutions/hubot-ibmcloud-auth/blob/master/CONTRIBUTING.md) before starting any work.  Steps for running this script for development purposes:
 
 ### Configuration Setup
 
@@ -92,10 +92,10 @@ HUBOT_IBMCLOUD_READERUSERS=<comma-separated list of reader-user emails -- no spa
 HUBOT_IBMCLOUD_AUTHENTICATION_DISABLED=<only if desired, disables authentication and authorization if true)>
 ```
 
-## License <a id="license"></a>
+## License
 
-See [LICENSE.txt](./LICENSE.txt) for license information.
+See [LICENSE.txt](https://github.com/ibm-cloud-solutions/hubot-ibmcloud-auth/blob/master/LICENSE.txt) for license information.
 
-## Contribute <a id="contribute"></a>
+## Contribute
 
 Please check out our [Contribution Guidelines](./CONTRIBUTING.md) for detailed information on how you can lend a hand.
