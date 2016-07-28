@@ -98,4 +98,4 @@ See [LICENSE.txt](https://github.com/ibm-cloud-solutions/hubot-ibmcloud-auth/blo
 
 ## Contribute
 
-Please check out our [Contribution Guidelines](./CONTRIBUTING.md) for detailed information on how you can lend a hand.
+Please check out our [Contribution Guidelines](https://github.com/ibm-cloud-solutions/hubot-ibmcloud-auth/blob/master/CONTRIBUTING.md) for detailed information on how you can lend a hand.
