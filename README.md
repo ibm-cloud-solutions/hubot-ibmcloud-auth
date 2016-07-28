@@ -1,3 +1,8 @@
+[![Build Status](https://travis-ci.org/ibm-cloud-solutions/hubot-ibmcloud-auth.svg?branch=master)](https://travis-ci.org/ibm-cloud-solutions/hubot-ibmcloud-auth)
+[![Coverage Status](https://coveralls.io/repos/github/ibm-cloud-solutions/hubot-ibmcloud-auth/badge.svg?branch=master)](https://coveralls.io/github/ibm-cloud-solutions/hubot-ibmcloud-auth?branch=master)
+[![Dependency Status](https://dependencyci.com/github/ibm-cloud-solutions/hubot-ibmcloud-auth/badge)](https://dependencyci.com/github/ibm-cloud-solutions/hubot-ibmcloud-auth)
+[![npm](https://img.shields.io/npm/v/hubot-ibmcloud-auth.svg?maxAge=2592000)]()
+
 # hubot-ibmcloud-auth
 
 Script package that provides simple whitelist access to commands in hubot scripts for IBM Cloud.  Two levels of access, reader and power, are offered.
