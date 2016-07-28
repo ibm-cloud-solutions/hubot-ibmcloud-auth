@@ -6,10 +6,6 @@
 //   HUBOT_IBMCLOUD_READERUSERS=<comma-separated list of reader-user emails -- no spaces!>
 //   HUBOT_IBMCLOUD_AUTHENTICATION_DISABLED=<only if desired, disables authentication and authorization if true)>
 //
-// Commands:
-//   hubot app(s) help - Show available commands in the app category.
-//
-//
 /*
 * Licensed Materials - Property of IBM
 * (C) Copyright IBM Corp. 2016. All Rights Reserved.
@@ -55,6 +51,7 @@ var READER_COMMANDS = [
 	'bluemix.space.service.list',
 	'bluemix.space.set',
 	'bluemix.vs.list',
+	'bluemix.app.problems',
 	'objectstorage.container.list',
 	'objectstorage.container.details',
 	'openwhisk.action.list',
