@@ -8,7 +8,7 @@
     "type": "git"
   },
   "publishConfig": {
-    "registry": "http://bot-npm.ng.bluemix.net"
+    "registry": "http://registry.npmjs.org/"
   },
   "scripts": {
     "start": "source config/env && hubot -a shell",
