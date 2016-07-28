@@ -32,13 +32,10 @@
     "coveralls": "^2.11.12",
     "eslint": "^2.9.0",
     "eslint-config-strongloop": "^2.0.1",
-    "hubot": "^2.19.0",
     "hubot-test-helper": "^1.4.4",
     "istanbul": "^0.4.0",
-    "istanbul-cobertura-badger": "^1.2.1",
     "mocha": "^2.4.5",
-    "rewire": "^2.5.1",
-    "shelljs": "^0.7.0"
+    "rewire": "^2.5.1"
   },
   "peerDependencies": {
     "hubot": "^2.19.0"
