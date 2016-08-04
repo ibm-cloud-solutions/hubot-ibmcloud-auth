@@ -154,7 +154,7 @@ describe('Test IBM Cloud auth function', function() {
 			room.robot.on('bluemix.app.list', function(){
 				done();
 			});
-			var res = { message: {user: {id: 'mimiron', email_address: 'myReaderUser@us.ibm.com'}}, response: room };
+			var res = { message: {user: {id: 'mimiron', profile: {email: 'myReaderUser@us.ibm.com'}}}, response: room };
 			room.robot.emit('ibmcloud-auth-to-nlc', res, { emitTarget: 'bluemix.app.list' });
 		});
 
@@ -164,7 +164,7 @@ describe('Test IBM Cloud auth function', function() {
 				expect(msg).to.be.eql('I\'m sorry, but you don\'t have access to that command');
 				done();
 			};
-			var res = { message: {user: {id: 'mimiron', email_address: 'myReaderUser@us.ibm.com'}}, response: room, reply: replyFn };
+			var res = { message: {user: {id: 'mimiron', profile: {email: 'myReaderUser@us.ibm.com'}}}, response: room, reply: replyFn };
 			room.robot.emit('ibmcloud-auth-to-nlc', res, { emitTarget: 'bluemix.app.start' });
 		});
 
@@ -173,12 +173,12 @@ describe('Test IBM Cloud auth function', function() {
 			room.robot.on('bluemix.app.start', function(){
 				done();
 			});
-			var res = { message: {user: {id: 'mimiron', email_address: 'myPowerUser@us.ibm.com'}}, response: room };
+			var res = { message: {user: {id: 'mimiron', profile: {email: 'myPowerUser@us.ibm.com'}}}, response: room };
 			room.robot.emit('ibmcloud-auth-to-nlc', res, { emitTarget: 'bluemix.app.start' });
 		});
 
 		it('should test emit - connamdID is undefined', function(done){
-			var res = { message: {user: {id: 'mimiron', email_address: 'myPowerUser@us.ibm.com'}}, response: room };
+			var res = { message: {user: {id: 'mimiron', profile: {email: 'myPowerUser@us.ibm.com'}}}, response: room };
 			room.robot.emit('ibmcloud-auth-to-nlc', res, {});
 			// Test pass if no errors are thrown.
 			done();
