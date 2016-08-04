@@ -31,7 +31,7 @@ var i18n = new (require('i18n-2'))({
 	defaultLocale: 'en',
 	// Prevent messages file from being overwritten in error conditions (like poor JSON).
 	updateFiles: false
-};
+});
 // At some point we need to toggle this setting based on some user input.
 i18n.setLocale('en');
 
