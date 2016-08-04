@@ -117,7 +117,13 @@ function checkAuthorization(context, next, done) {
 		commandId = context.commandId || context.listener.options.id;
 	}
 
-	var emailAddress = context.response.message.user.email_address;
+
+	var emailAddress;
+
+	if (context.response.message.user.profile) {
+		emailAddress = context.response.message.user.profile.email;
+	}
+
 	var unauthorized = false;
 
 	if (isReaderCommand(commandId) && (!isAuthorizedReader(emailAddress) && !isAuthorizedPowerUser(
