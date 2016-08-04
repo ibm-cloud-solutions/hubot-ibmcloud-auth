@@ -94,7 +94,7 @@ describe('Test IBM Cloud auth function', function() {
 		it('unauthorized for recognized reader email on valid power command', function(done) {
 			ibmcloudAuthAPI.__get__('READER_EMAILS').push('toddstsm@us.ibm.com');
 			fakeContext.listener.options.id = 'bluemix.app.remove';
-			fakeContext.response.message.user.email = 'toddstsm@us.ibm.com';
+			fakeContext.response.message.user.profile.email = 'toddstsm@us.ibm.com';
 			fakeContext.response.reply = function(message) {
 				expect(message).to.not.be.undefined;
 				assert.typeOf(message, 'string', 'message is a string');
