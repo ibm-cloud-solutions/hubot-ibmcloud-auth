@@ -34,7 +34,10 @@ describe('Test IBM Cloud auth function', function() {
 			},
 			response: {
 				message: {
-					user: {}
+					user: {
+						profile: {
+						}
+					}
 				}
 			}
 		};
@@ -43,7 +46,7 @@ describe('Test IBM Cloud auth function', function() {
 	context('checkAuthorization', function() {
 		it('authorized for unrecognized command', function(done) {
 			fakeContext.listener.options.id = 'InvalidId';
-			fakeContext.response.message.user.email_address = 'toddstsm@us.ibm.com';
+			fakeContext.response.message.user.profile.email = 'toddstsm@us.ibm.com';
 			ibmcloudAuth.checkAuthorization(fakeContext, function() {
 				expect(false).to.be.false;
 				done();
@@ -56,7 +59,7 @@ describe('Test IBM Cloud auth function', function() {
 
 		it('unauthorized for unrecognized reader email on valid reader command', function(done) {
 			fakeContext.listener.options.id = 'bluemix.app.list';
-			fakeContext.response.message.user.email_address = 'toddstsm@us.ibm.com';
+			fakeContext.response.message.user.profile.email = 'toddstsm@us.ibm.com';
 			fakeContext.response.reply = function(message) {
 				expect(message).to.not.be.undefined;
 				assert.typeOf(message, 'string', 'message is a string');
@@ -75,7 +78,7 @@ describe('Test IBM Cloud auth function', function() {
 		it('authorized for recognized reader email on valid reader command', function(done) {
 			ibmcloudAuthAPI.__get__('READER_EMAILS').push('toddstsm@us.ibm.com');
 			fakeContext.listener.options.id = 'bluemix.app.list';
-			fakeContext.response.message.user.email_address = 'toddstsm@us.ibm.com';
+			fakeContext.response.message.user.profile.email = 'toddstsm@us.ibm.com';
 
 			ibmcloudAuth.checkAuthorization(fakeContext, function() {
 				expect(false).to.be.false;
@@ -91,7 +94,7 @@ describe('Test IBM Cloud auth function', function() {
 		it('unauthorized for recognized reader email on valid power command', function(done) {
 			ibmcloudAuthAPI.__get__('READER_EMAILS').push('toddstsm@us.ibm.com');
 			fakeContext.listener.options.id = 'bluemix.app.remove';
-			fakeContext.response.message.user.email_address = 'toddstsm@us.ibm.com';
+			fakeContext.response.message.user.email = 'toddstsm@us.ibm.com';
 			fakeContext.response.reply = function(message) {
 				expect(message).to.not.be.undefined;
 				assert.typeOf(message, 'string', 'message is a string');
@@ -111,7 +114,7 @@ describe('Test IBM Cloud auth function', function() {
 		it('authorized for recognized power email on valid power command', function(done) {
 			ibmcloudAuthAPI.__get__('POWER_EMAILS').push('toddstsm@us.ibm.com');
 			fakeContext.listener.options.id = 'bluemix.app.remove';
-			fakeContext.response.message.user.email_address = 'toddstsm@us.ibm.com';
+			fakeContext.response.message.user.profile.email = 'toddstsm@us.ibm.com';
 
 			ibmcloudAuth.checkAuthorization(fakeContext, function() {
 				expect(false).to.be.false;

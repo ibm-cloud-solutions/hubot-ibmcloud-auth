@@ -117,7 +117,13 @@ function checkAuthorization(context, next, done) {
 		commandId = context.commandId || context.listener.options.id;
 	}
 
+	// try to pull email address from two different locations
+	// different versions of slack adapter store the email address in
+	// two different places
 	var emailAddress = context.response.message.user.email_address;
+	if (!emailAddress && context.response.message.user.profile) {
+		emailAddress = context.response.message.user.profile.email;
+	}
 	var unauthorized = false;
 
 	if (isReaderCommand(commandId) && (!isAuthorizedReader(emailAddress) && !isAuthorizedPowerUser(
