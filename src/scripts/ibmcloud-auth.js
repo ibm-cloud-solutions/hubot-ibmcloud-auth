@@ -23,15 +23,15 @@ const env = require(path.resolve(__dirname, 'env'));
 // It will read from a peer messages.json file.  Later, these
 // messages can be referenced throughout the module.
 // --------------------------------------------------------------
-const i18n = require('i18n');
-var i18nConfig = {
+var i18n = new (require('i18n-2'))({
 	// Add more languages to the list of locales when the files are created.
 	locales: ['en'],
+	extension: '.json',
 	directory: __dirname + '/../locales',
+	defaultLocale: 'en',
 	// Prevent messages file from being overwritten in error conditions (like poor JSON).
 	updateFiles: false
-};
-i18n.configure(i18nConfig);
+});
 // At some point we need to toggle this setting based on some user input.
 i18n.setLocale('en');
 
