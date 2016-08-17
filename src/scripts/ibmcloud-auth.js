@@ -16,7 +16,7 @@
 
 var path = require('path');
 var TAG = path.basename(__filename);
-const env = require(path.resolve(__dirname, 'env'));
+const env = require(path.resolve(__dirname, '..', 'lib', 'env'));
 
 // --------------------------------------------------------------
 // i18n (internationalization)
@@ -160,6 +160,7 @@ module.exports = function(robot) {
 	robot.on('ibmcloud-auth-to-nlc', (res, authEmitParams) => {
 		checkAuthorization({response: res, commandId: authEmitParams.emitTarget}, function next(){
 			// Forward the request to the given emit target with the given parameters
+			bot.logger.debug(`Auth granted for NLC command. Emitting to ${authEmitParams.emitTarget} with params ${authEmitParams.emitParameters}`);
 			bot.emit(authEmitParams.emitTarget, res, authEmitParams.emitParameters);
 		}, function done() {
 		});
