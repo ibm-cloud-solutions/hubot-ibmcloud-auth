@@ -3,7 +3,7 @@
   "version": "0.0.17",
   "description": "IBM Cloud bot authorization and white listing",
   "main": "index.js",
-  "respository": {
+  "repository": {
     "url": "https://github.com/ibm-cloud-solutions/hubot-ibmcloud-auth",
     "type": "git"
   },
