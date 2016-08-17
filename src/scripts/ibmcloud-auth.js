@@ -71,6 +71,7 @@ var POWER_COMMANDS = [
 	'bluemix.app.scale',
 	'bluemix.app.start',
 	'bluemix.app.stop',
+	'bluemix.app.restart',
 	'bluemix.cloudant.createdatabase',
 	'bluemix.cloudant.setpermissions',
 	'bluemix.container.remove',
