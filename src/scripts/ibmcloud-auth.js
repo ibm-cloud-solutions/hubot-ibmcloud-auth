@@ -122,7 +122,7 @@ function checkAuthorization(context, next, done) {
 	var commandId;
 	if (!context ||
 		(!context.commandId && (!context.listener || !context.listener.options || !context.listener.options.id))){
-		bot.logger.warning(`${TAG}: The 'context' object doesn't contain a 'commandId' or 'listener.options_id' key. Unrecognized commands are authorized.`);
+		bot.logger.warning(`${TAG}: Authorization was requested for a script without a valid id. Authorization is granted for unrecognized commands. You should provide an id in your scripts.`);
 	} else {
 		commandId = context.commandId || context.listener.options.id;
 	}
