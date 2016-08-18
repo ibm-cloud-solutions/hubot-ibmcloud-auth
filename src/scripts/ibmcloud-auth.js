@@ -91,6 +91,7 @@ var POWER_COMMANDS = [
 	'bluemix.vs.stop',
 	'github.deploy',
 	'nlc.train',
+	'nlc.auto.approve',
 	'objectstorage.retrieve.object',
 	'openwhisk.action.invoke',
 	'twitter.monitoring.enable',
