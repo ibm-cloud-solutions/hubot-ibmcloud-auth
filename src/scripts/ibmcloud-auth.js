@@ -2,8 +2,18 @@
 //	Adds middleware to authenticate user commands.
 //
 // Configuration:
-//	 HUBOT_IBMCLOUD_POWERUSERS=<comma-separated list of power-user emails -- no spaces!>
+//   HUBOT_IBMCLOUD_POWERUSERS=<comma-separated list of power-user emails -- no spaces!>
 //   HUBOT_IBMCLOUD_READERUSERS=<comma-separated list of reader-user emails -- no spaces!>
+//   HUBOT_IBMCLOUD_LDAP_PROTOCOL=<ldap or ldaps>
+//   HUBOT_IBMCLOUD_LDAP_SERVER=<LDAP server name>
+//   HUBOT_IBMCLOUD_LDAP_PORT=<LDAP port -- 1389>
+//   HUBOT_IBMCLOUD_LDAP_BIND_USER=<LDAP login user>
+//   HUBOT_IBMCLOUD_LDAP_BIND_PASSWORD=<LDAP login user password>
+//   HUBOT_IBMCLOUD_LDAP_ORG_ROOT=<LDAP organization root -- "dc=example,dc=com">
+//   HUBOT_IBMCLOUD_LDAP_EMAIL_FIELD=<LDAP user email field name -- mail>
+//   HUBOT_IBMCLOUD_LDAP_GROUP_MEMBERSHIP_FIELD=<LDAP group member field -- uniqueMember or memberuid>
+//   HUBOT_IBMCLOUD_LDAP_POWERUSERS_GROUP_DN_LIST=<semi-colon separated list of LDAP group distinguished names -- no spaces!>
+//   HUBOT_IBMCLOUD_LDAP_READERUSERS_GROUP_DN_LIST=<semi-colon separated list of LDAP group distinguished names -- no spaces!>
 //   HUBOT_IBMCLOUD_AUTHENTICATION_DISABLED=<only if desired, disables authentication and authorization if true)>
 //
 /*

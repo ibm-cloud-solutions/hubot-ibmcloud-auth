@@ -52,6 +52,15 @@ describe('Test IBM Cloud auth function', function() {
 			ibmcloudAuth.ldapInit().then(connected => {
 				done();
 			});
+			var bot = {
+				logger: {
+					debug: () => {},
+					info: () => {},
+					error: () => {},
+					warning: () => {}
+				}
+			};
+			ibmcloudAuthAPI.__set__('bot', bot);
 		});
 
 		it('authorized for unrecognized command', function(done) {
