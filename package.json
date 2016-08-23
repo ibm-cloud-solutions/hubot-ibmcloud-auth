@@ -1,6 +1,6 @@
 {
   "name": "hubot-ibmcloud-auth",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "IBM Cloud bot authorization and white listing",
   "main": "index.js",
   "repository": {
