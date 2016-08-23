@@ -17,6 +17,7 @@ const helper = new Helper('../src/scripts/ibmcloud-auth.js');
 const ibmcloudAuth = {};
 
 ibmcloudAuth.ldapInit = ibmcloudAuthAPI.__get__('ldapInit');
+ibmcloudAuth.reportError = ibmcloudAuthAPI.__get__('reportError');
 ibmcloudAuth.checkAuthorization = ibmcloudAuthAPI.__get__('checkAuthorization');
 ibmcloudAuth.isAuthorizedReader = ibmcloudAuthAPI.__get__('isAuthorizedReader');
 ibmcloudAuth.isAuthorizedPowerUser = ibmcloudAuthAPI.__get__('isAuthorizedPowerUser');
@@ -63,7 +64,6 @@ describe('Test IBM Cloud auth function', function() {
 				expect(true).to.be.false;
 				done();
 			});
-
 		});
 
 		it('unauthorized for unrecognized reader email on valid reader command', function(done) {
@@ -201,6 +201,9 @@ describe('Test IBM Cloud auth function', function() {
 			});
 		});
 
+		it('test error reporting', function(){
+			ibmcloudAuth.reportError('error message', {});
+		});
 	});
 
 	context('Test emit entry point (used for natural language)', function(){

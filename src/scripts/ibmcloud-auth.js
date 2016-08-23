@@ -120,27 +120,14 @@ if (env.readerUsers) {
 function ldapInit() {
 	var promise = new Promise((resolve, reject) => {
 		if (env.ldapServer && env.ldapPort && env.ldapBindUser && env.ldapBindPassword) {
-			if (env.ldapPowerGroups === ''){
-				POWER_GROUPS = [];
-			} else {
-				POWER_GROUPS = env.ldapPowerGroups.split(';');
-			}
-			if (env.ldapReaderGroups === ''){
-				READER_GROUPS = [];
-			} else {
-				READER_GROUPS = env.ldapReaderGroups.split(';');
-			}
-
+			var ldapUrl = `${env.ldapProtocol}://${env.ldapServer}:${env.ldapPort}`;
+			POWER_GROUPS = env.ldapPowerGroups.split(';');
+			READER_GROUPS = env.ldapReaderGroups.split(';');
 			if (bot) {
 				bot.logger.debug(`${TAG}: LDAP POWER_GROUPS=${POWER_GROUPS}`);
 				bot.logger.debug(`${TAG}: LDAP READER_GROUPS=${READER_GROUPS}`);
-			}
-
-			var ldapUrl = `${env.ldapProtocol}://${env.ldapServer}:${env.ldapPort}`;
-			if (bot) {
 				bot.logger.info(`${TAG}: Attemping to connect to LDAP at ${ldapUrl}.`);
 			}
-
 			ldapClient = ldap.createClient({
 				url: ldapUrl,
 				connectTimeout: 5000,
@@ -148,10 +135,7 @@ function ldapInit() {
 			});
 			ldapClient.bind(env.ldapBindUser, env.ldapBindPassword, function(err) {
 				if (err) {
-					if (bot) {
-						bot.logger.error(`${TAG}: An error was hit during LDAP binding. Cannot connect to ldap at ${ldapUrl}`);
-						bot.logger.error(err);
-					}
+					reportError(`${TAG}: An error was hit during LDAP binding. Cannot connect to ldap at ${ldapUrl}`, err);
 				} else {
 					ldapConnected = true;
 					if (bot) {
@@ -217,10 +201,7 @@ function checkAuthorization(context, next, done) {
 		}
 	})
 	.catch(err => {
-		if (bot) {
-			bot.logger.error(`${TAG}: An error occurred during authorization checks:`);
-			bot.logger.error(err);
-		}
+		reportError(`${TAG}: An error occurred during authorization checks:`, err);
 		let msg = i18n.__('no.access');
 		context.response.reply(msg);
 		done();
