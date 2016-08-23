@@ -241,9 +241,15 @@ module.exports = function(robot) {
 		});
 	})
 	.catch(err => {
-		bot.logger.error(`${TAG}: An error occurred during authorization initialization:`);
-		bot.logger.error(err);
+		reportError(`${TAG}: An error occurred during authorization initialization:`, err);
 	});
+};
+
+function reportError(message, err) {
+	if (bot) {
+		bot.logger.error(message);
+		bot.logger.error(err);
+	}
 };
 
 function ldapSearch(query, filter) {
@@ -258,10 +264,7 @@ function ldapSearch(query, filter) {
 		};
 		ldapClient.search(query, opts, function(err, res) {
 			if (err) {
-				if (bot) {
-					bot.logger.error(`${TAG}: An error was hit during LDAP search.`);
-					bot.logger.error(err);
-				}
+				reportError(`${TAG}: An error was hit during LDAP search.`, err);
 				throw err;
 			}
 			res.on('searchEntry', function(entry) {
@@ -272,10 +275,7 @@ function ldapSearch(query, filter) {
 				resolve(entry);
 			});
 			res.on('error', function(err) {
-				if (bot) {
-					bot.logger.error(`${TAG}: An error was hit during LDAP search.`);
-					bot.logger.error(err);
-				}
+				reportError(`${TAG}: An error was hit during LDAP search.`, err);
 				reject(err);
 			});
 			res.on('end', function(result) {
@@ -311,12 +311,8 @@ function isMemberOfGroup(email, group) {
 			var filter = `(${env.ldapGroupMembershipField}=${dn})`;
 			return ldapSearch(group, filter);
 		}
-	})
-	.catch(err => {
-		if (bot) {
-			bot.logger.error(`${TAG}: An error was hit during getting the distinguished name.`);
-			bot.logger.error(err);
-		}
+	}).catch(err => {
+		reportError(`${TAG}: An error was hit during getting the distinguished name.`, err);
 		return Promise.reject(err);
 	});
 };
@@ -349,10 +345,7 @@ function isMemberOfAGroup(email, groupArray) {
 					resolve(result);
 				})
 				.catch(err => {
-					if (bot) {
-						bot.logger.error(`${TAG}: An error occured while testing group membership.`);
-						bot.logger.error(err);
-					}
+					reportError(`${TAG}: An error occured while testing group membership.`, err);
 					resolve(false);
 				});
 			}
@@ -370,10 +363,7 @@ function isAuthorizedReader(email) {
 				isMemberOfAGroup(email, READER_GROUPS).then(result => {
 					resolve(result);
 				}).catch(err => {
-					if (bot) {
-						bot.logger.error(`${TAG}: An error was hit during LDAP group membership lookup.`);
-						bot.logger.error(err);
-					}
+					reportError(`${TAG}: An error was hit during LDAP group membership lookup.`, err);
 					resolve(false);
 				});
 			} else {
@@ -393,10 +383,7 @@ function isAuthorizedPowerUser(email) {
 				isMemberOfAGroup(email, POWER_GROUPS).then(result => {
 					resolve(result);
 				}).catch(err => {
-					if (bot) {
-						bot.logger.error(`${TAG}: An error was hit during LDAP group membership lookup.`);
-						bot.logger.error(err);
-					}
+					reportError(`${TAG}: An error was hit during LDAP group membership lookup.`, err);
 					resolve(false);
 				});
 			} else {

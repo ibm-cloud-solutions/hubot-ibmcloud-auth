@@ -25,10 +25,19 @@ Steps for adding this to your hubot:
 ```
 HUBOT_IBMCLOUD_POWERUSERS=<comma-separated list of power-user emails -- no spaces!>
 HUBOT_IBMCLOUD_READERUSERS=<comma-separated list of reader-user emails -- no spaces!>
+HUBOT_IBMCLOUD_LDAP_PROTOCOL=<ldap or ldaps>
+HUBOT_IBMCLOUD_LDAP_SERVER=<LDAP server name>
+HUBOT_IBMCLOUD_LDAP_PORT=<LDAP port -- 1389>
+HUBOT_IBMCLOUD_LDAP_BIND_USER=<LDAP login user>
+HUBOT_IBMCLOUD_LDAP_BIND_PASSWORD=<LDAP login user password>
+HUBOT_IBMCLOUD_LDAP_ORG_ROOT=<LDAP organization root -- "dc=example,dc=com">
+HUBOT_IBMCLOUD_LDAP_EMAIL_FIELD=<LDAP user email field name -- mail>
+HUBOT_IBMCLOUD_LDAP_GROUP_MEMBERSHIP_FIELD=<LDAP group member field -- uniqueMember or memberuid>
+HUBOT_IBMCLOUD_LDAP_POWERUSERS_GROUP_DN_LIST=<semi-colon separated list of LDAP group distinguished names -- no spaces!>
+HUBOT_IBMCLOUD_LDAP_READERUSERS_GROUP_DN_LIST=<semi-colon separated list of LDAP group distinguished names -- no spaces!>
 HUBOT_IBMCLOUD_AUTHENTICATION_DISABLED=<only if desired, disables authentication and authorization if true)>
 ```
-5. This package will always be used with hubot-bluemix so you'll want to follow all instructions for setting up hubot-bluemix as well.
-6. Start up your bot & off to the races!
+5. Start up your bot & off to the races!
 
 ## Access
 
@@ -50,6 +59,15 @@ Reader-level users have access to the following operations:
 - get the current openwhisk namespace the user is looking at
 - set the current openwhisk namespace the user is looking at
 - list virtual servers
+- list Cloudant databases
+- list Cloudant database info
+- list Cloudant database views
+- run Cloudant database view
+- get natural language classifier status
+- list natural language classifiers
+- list object storage containers
+- get object storage container details
+
 
 Power-level users have access to the following operations:
 - remove an app
@@ -75,6 +93,11 @@ Power-level users have access to the following operations:
 - enable twitter monitoring
 - disable twitter monitoring
 - edit monitoring tweets
+- create Cloudant databases
+- set Cloudant database permissions
+- start natural language classifier training
+- enable auto approve for natural language classifier
+- retrieve object storage object
 
 If a command is not listed, all users have access.
 
@@ -89,6 +112,16 @@ Please refer to the [CONTRIBUTING.md](https://github.com/ibm-cloud-solutions/hub
 ```
 HUBOT_IBMCLOUD_POWERUSERS=<comma-separated list of power-user emails -- no spaces!>
 HUBOT_IBMCLOUD_READERUSERS=<comma-separated list of reader-user emails -- no spaces!>
+HUBOT_IBMCLOUD_LDAP_PROTOCOL=<ldap or ldaps>
+HUBOT_IBMCLOUD_LDAP_SERVER=<LDAP server name>
+HUBOT_IBMCLOUD_LDAP_PORT=<LDAP port -- 1389>
+HUBOT_IBMCLOUD_LDAP_BIND_USER=<LDAP login user>
+HUBOT_IBMCLOUD_LDAP_BIND_PASSWORD=<LDAP login user password>
+HUBOT_IBMCLOUD_LDAP_ORG_ROOT=<LDAP organization root -- "dc=example,dc=com">
+HUBOT_IBMCLOUD_LDAP_EMAIL_FIELD=<LDAP user email field name -- mail>
+HUBOT_IBMCLOUD_LDAP_GROUP_MEMBERSHIP_FIELD=<LDAP group member field -- uniqueMember or memberuid>
+HUBOT_IBMCLOUD_LDAP_POWERUSERS_GROUP_DN_LIST=<semi-colon separated list of LDAP group distinguished names -- no spaces!>
+HUBOT_IBMCLOUD_LDAP_READERUSERS_GROUP_DN_LIST=<semi-colon separated list of LDAP group distinguished names -- no spaces!>
 HUBOT_IBMCLOUD_AUTHENTICATION_DISABLED=<only if desired, disables authentication and authorization if true)>
 ```
 
