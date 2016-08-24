@@ -98,6 +98,7 @@ Power-level users have access to the following operations:
 - start natural language classifier training
 - enable auto approve for natural language classifier
 - retrieve object storage object
+- search for an object in object storage
 
 If a command is not listed, all users have access.
 
