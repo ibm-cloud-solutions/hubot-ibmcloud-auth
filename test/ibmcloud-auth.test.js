@@ -15,6 +15,9 @@ const Helper = require('hubot-test-helper');
 const helper = new Helper('../src/scripts/ibmcloud-auth.js');
 
 const ibmcloudAuth = {};
+
+ibmcloudAuth.ldapInit = ibmcloudAuthAPI.__get__('ldapInit');
+ibmcloudAuth.reportError = ibmcloudAuthAPI.__get__('reportError');
 ibmcloudAuth.checkAuthorization = ibmcloudAuthAPI.__get__('checkAuthorization');
 ibmcloudAuth.isAuthorizedReader = ibmcloudAuthAPI.__get__('isAuthorizedReader');
 ibmcloudAuth.isAuthorizedPowerUser = ibmcloudAuthAPI.__get__('isAuthorizedPowerUser');
@@ -39,11 +42,27 @@ describe('Test IBM Cloud auth function', function() {
 						}
 					}
 				}
+
 			}
 		};
 	});
 
 	context('checkAuthorization', function() {
+		beforeEach(function(done){
+			ibmcloudAuth.ldapInit().then(connected => {
+				done();
+			});
+			var bot = {
+				logger: {
+					debug: () => {},
+					info: () => {},
+					error: () => {},
+					warning: () => {}
+				}
+			};
+			ibmcloudAuthAPI.__set__('bot', bot);
+		});
+
 		it('authorized for unrecognized command', function(done) {
 			fakeContext.listener.options.id = 'InvalidId';
 			fakeContext.response.message.user.profile.email = 'toddstsm@us.ibm.com';
@@ -54,7 +73,6 @@ describe('Test IBM Cloud auth function', function() {
 				expect(true).to.be.false;
 				done();
 			});
-
 		});
 
 		it('unauthorized for unrecognized reader email on valid reader command', function(done) {
@@ -72,7 +90,6 @@ describe('Test IBM Cloud auth function', function() {
 				expect(false).to.be.false;
 				done();
 			});
-
 		});
 
 		it('authorized for recognized reader email on valid reader command', function(done) {
@@ -126,6 +143,76 @@ describe('Test IBM Cloud auth function', function() {
 				done();
 			});
 		});
+
+		it('authorized for recognized reader email from LDAP group on valid reader command', function(done) {
+			fakeContext.listener.options.id = 'bluemix.app.list';
+			fakeContext.response.message.user.profile.email = 'galieleo@ldap.forumsys.com';
+			fakeContext.response.reply = function(message) {
+				expect(message).to.not.be.undefined;
+				assert.typeOf(message, 'string', 'message is a string');
+			};
+			ibmcloudAuth.checkAuthorization(fakeContext, function() {
+				expect(false).to.be.false;
+				done();
+			}, function() {
+				expect(true).to.be.false;
+				done();
+			});
+		}).timeout(10000);
+
+		it('authorized for recognized power email from LDAP group on valid power command', function(done) {
+			fakeContext.listener.options.id = 'bluemix.app.remove';
+			fakeContext.response.message.user.profile.email = 'riemann@ldap.forumsys.com';
+			fakeContext.response.reply = function(message) {
+				expect(message).to.not.be.undefined;
+				assert.typeOf(message, 'string', 'message is a string');
+			};
+			ibmcloudAuth.checkAuthorization(fakeContext, function() {
+				expect(false).to.be.false;
+				done();
+			}, function() {
+				expect(true).to.be.false;
+				done();
+			});
+		}).timeout(10000);
+
+		it('unauthorized for recognized reader email from LDAP group on valid power command', function(done) {
+			fakeContext.listener.options.id = 'bluemix.app.remove';
+			fakeContext.response.message.user.profile.email = 'galieleo@ldap.forumsys.com';
+			fakeContext.response.reply = function(message) {
+				expect(message).to.not.be.undefined;
+				assert.typeOf(message, 'string', 'message is a string');
+			};
+
+			ibmcloudAuth.checkAuthorization(fakeContext, function() {
+				expect(true).to.be.false;
+				done();
+			}, function() {
+				expect(false).to.be.false;
+				done();
+			});
+		});
+
+		it('unauthorized for unrecognized reader email from LDAP on valid reader command', function(done) {
+			fakeContext.listener.options.id = 'bluemix.app.list';
+			fakeContext.response.message.user.profile.email = 'curie@ldap.forumsys.com';
+			fakeContext.response.reply = function(message) {
+				expect(message).to.not.be.undefined;
+				assert.typeOf(message, 'string', 'message is a string');
+			};
+
+			ibmcloudAuth.checkAuthorization(fakeContext, function() {
+				expect(true).to.be.false;
+				done();
+			}, function() {
+				expect(false).to.be.false;
+				done();
+			});
+		});
+
+		it('test error reporting', function(){
+			ibmcloudAuth.reportError('error message', {});
+		});
 	});
 
 	context('Test emit entry point (used for natural language)', function(){
@@ -145,9 +232,10 @@ describe('Test IBM Cloud auth function', function() {
 				done();
 			});
 			var res = { message: {user: {id: 'mimiron'}}, response: room };
-			room.robot.emit('ibmcloud-auth-to-nlc', res, { emitTarget: 'command.unkown' });
-		});
-
+			setTimeout(() => {
+				room.robot.emit('ibmcloud-auth-to-nlc', res, { emitTarget: 'command.unkown' });
+			}, 600);
+		}).timeout(10000);
 
 		it('emit - reader user is authorized', function(done){
 			// A TIMEOUT means that the test failed.
@@ -155,9 +243,10 @@ describe('Test IBM Cloud auth function', function() {
 				done();
 			});
 			var res = { message: {user: {id: 'mimiron', profile: {email: 'myReaderUser@us.ibm.com'}}}, response: room };
-			room.robot.emit('ibmcloud-auth-to-nlc', res, { emitTarget: 'bluemix.app.list' });
-		});
-
+			setTimeout(() => {
+				room.robot.emit('ibmcloud-auth-to-nlc', res, { emitTarget: 'bluemix.app.list' });
+			}, 600);
+		}).timeout(10000);
 
 		it('should test emit - reader user is denied', function(done){
 			var replyFn = function(msg){
@@ -165,8 +254,10 @@ describe('Test IBM Cloud auth function', function() {
 				done();
 			};
 			var res = { message: {user: {id: 'mimiron', profile: {email: 'myReaderUser@us.ibm.com'}}}, response: room, reply: replyFn };
-			room.robot.emit('ibmcloud-auth-to-nlc', res, { emitTarget: 'bluemix.app.start' });
-		});
+			setTimeout(() => {
+				room.robot.emit('ibmcloud-auth-to-nlc', res, { emitTarget: 'bluemix.app.start' });
+			}, 600);
+		}).timeout(10000);
 
 		it('should test emit - power user is authorized', function(done){
 			// A TIMEOUT means that the test failed.
@@ -174,34 +265,40 @@ describe('Test IBM Cloud auth function', function() {
 				done();
 			});
 			var res = { message: {user: {id: 'mimiron', profile: {email: 'myPowerUser@us.ibm.com'}}}, response: room };
-			room.robot.emit('ibmcloud-auth-to-nlc', res, { emitTarget: 'bluemix.app.start' });
-		});
+			setTimeout(() => {
+				room.robot.emit('ibmcloud-auth-to-nlc', res, { emitTarget: 'bluemix.app.start' });
+			}, 600);
+		}).timeout(10000);
 
 		it('should test emit - connamdID is undefined', function(done){
 			var res = { message: {user: {id: 'mimiron', profile: {email: 'myPowerUser@us.ibm.com'}}}, response: room };
 			room.robot.emit('ibmcloud-auth-to-nlc', res, {});
 			// Test pass if no errors are thrown.
 			done();
-		});
+		}).timeout(10000);
 	});
 
 
 	context('Test permission methods - Not authorized', function() {
 		it('isAuthorizedReader does not find authorized reader email', function() {
-			expect(ibmcloudAuth.isAuthorizedReader('toddstsm@us.ibm.com')).to.be.false;
-		});
+			ibmcloudAuth.isAuthorizedReader('toddstsm@us.ibm.com').then(auth => {
+				expect(auth).to.be.false;
+			});
+		}).timeout(10000);
 
 		it('isAuthorizedPowerUser does not find authorized power email', function() {
-			expect(ibmcloudAuth.isAuthorizedPowerUser('toddstsm@us.ibm.com')).to.be.false;
-		});
+			ibmcloudAuth.isAuthorizedPowerUser('toddstsm@us.ibm.com').then(auth => {
+				expect(auth).to.be.false;
+			});
+		}).timeout(10000);
 
 		it('isReaderCommand does not find reader command', function() {
 			expect(ibmcloudAuth.isReaderCommand('awesomeCommand')).to.be.false;
-		});
+		}).timeout(10000);
 
 		it('isPowerCommand does not find power command', function() {
 			expect(ibmcloudAuth.isPowerCommand('awesomeCommand')).to.be.false;
-		});
+		}).timeout(10000);
 	});
 
 	context('Test permission methods - Authorized', function() {
@@ -216,19 +313,23 @@ describe('Test IBM Cloud auth function', function() {
 		});
 
 		it('isAuthorizedReader finds authorized reader email', function() {
-			expect(ibmcloudAuth.isAuthorizedReader('toddstsm@us.ibm.com')).to.be.true;
-		});
+			ibmcloudAuth.isAuthorizedReader('toddstsm@us.ibm.com').then(auth => {
+				expect(auth).to.be.true;
+			});
+		}).timeout(10000);
 
 		it('isAuthorizedPowerUser finds authorized power email', function() {
-			expect(ibmcloudAuth.isAuthorizedPowerUser('toddstsm@us.ibm.com')).to.be.true;
-		});
+			ibmcloudAuth.isAuthorizedPowerUser('toddstsm@us.ibm.com').then(auth => {
+				expect(auth).to.be.true;
+			});
+		}).timeout(10000);
 
 		it('isReaderCommand finds reader command', function() {
 			expect(ibmcloudAuth.isReaderCommand('bluemix.app.list')).to.be.true;
-		});
+		}).timeout(10000);
 
 		it('isPowerCommand finds power command', function() {
 			expect(ibmcloudAuth.isPowerCommand('bluemix.app.remove')).to.be.true;
-		});
+		}).timeout(10000);
 	});
 });
