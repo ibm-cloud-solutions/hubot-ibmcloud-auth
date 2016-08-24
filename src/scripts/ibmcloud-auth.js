@@ -104,6 +104,7 @@ var POWER_COMMANDS = [
 	'nlc.train',
 	'nlc.auto.approve',
 	'objectstorage.retrieve.object',
+	'objectstorage.search.object',
 	'openwhisk.action.invoke',
 	'twitter.monitoring.enable',
 	'twitter.monitoring.disable',
