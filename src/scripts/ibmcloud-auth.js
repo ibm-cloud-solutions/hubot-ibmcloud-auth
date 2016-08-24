@@ -69,6 +69,7 @@ var READER_COMMANDS = [
 	'bluemix.app.problems',
 	'nlc.status',
 	'nlc.list',
+	'nlc.data',
 	'objectstorage.container.list',
 	'objectstorage.container.details',
 	'openwhisk.action.list',
