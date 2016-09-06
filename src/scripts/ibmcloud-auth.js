@@ -24,9 +24,9 @@
 */
 'use strict';
 
-var ldap = require('ldapjs');
-var path = require('path');
-var TAG = path.basename(__filename);
+const ldap = require('ldapjs');
+const path = require('path');
+const TAG = path.basename(__filename);
 const env = require(path.resolve(__dirname, '..', 'lib', 'env'));
 
 // --------------------------------------------------------------
@@ -34,7 +34,7 @@ const env = require(path.resolve(__dirname, '..', 'lib', 'env'));
 // It will read from a peer messages.json file.  Later, these
 // messages can be referenced throughout the module.
 // --------------------------------------------------------------
-var i18n = new (require('i18n-2'))({
+const i18n = new (require('i18n-2'))({
 	// Add more languages to the list of locales when the files are created.
 	locales: ['en'],
 	extension: '.json',
@@ -46,9 +46,9 @@ var i18n = new (require('i18n-2'))({
 // At some point we need to toggle this setting based on some user input.
 i18n.setLocale('en');
 
-var bot = null;
+let bot = null;
 
-var READER_COMMANDS = [
+const READER_COMMANDS = [
 	'bluemix.app.list',
 	'bluemix.app.logs',
 	'bluemix.app.status',
@@ -79,7 +79,7 @@ var READER_COMMANDS = [
 	'twitter.tweet.list'
 ];
 
-var POWER_COMMANDS = [
+const POWER_COMMANDS = [
 	'bluemix.app.remove',
 	'bluemix.app.restage',
 	'bluemix.app.scale',
@@ -112,14 +112,14 @@ var POWER_COMMANDS = [
 	'twitter.tweet.edit'
 ];
 
-var POWER_EMAILS = [];
-var READER_EMAILS = [];
-var POWER_GROUPS = [];
-var READER_GROUPS = [];
-var HUBOT_IBMCLOUD_AUTHENTICATION_DISABLED = env.authenticationDisabled ? env.authenticationDisabled : false;
+let POWER_EMAILS = [];
+let READER_EMAILS = [];
+let POWER_GROUPS = [];
+let READER_GROUPS = [];
+const HUBOT_IBMCLOUD_AUTHENTICATION_DISABLED = env.authenticationDisabled ? env.authenticationDisabled : false;
 
-var ldapClient = null;
-var ldapConnected = false;
+let ldapClient = null;
+let ldapConnected = false;
 
 if (env.powerUsers) {
 	POWER_EMAILS = env.powerUsers.split(',');
@@ -130,9 +130,9 @@ if (env.readerUsers) {
 }
 
 function ldapInit() {
-	var promise = new Promise((resolve, reject) => {
+	let promise = new Promise((resolve, reject) => {
 		if (env.ldapServer && env.ldapPort && env.ldapBindUser && env.ldapBindPassword) {
-			var ldapUrl = `${env.ldapProtocol}://${env.ldapServer}:${env.ldapPort}`;
+			let ldapUrl = `${env.ldapProtocol}://${env.ldapServer}:${env.ldapPort}`;
 			POWER_GROUPS = env.ldapPowerGroups.split(';');
 			READER_GROUPS = env.ldapReaderGroups.split(';');
 			if (bot) {
@@ -172,7 +172,7 @@ function checkAuthorization(context, next, done) {
 		return;
 	}
 
-	var commandId;
+	let commandId;
 	if (!context ||
 		(!context.commandId && (!context.listener || !context.listener.options || !context.listener.options.id))){
 		bot.logger.warning(`${TAG}: Authorization was requested for a script without a valid id. Authorization is granted for unrecognized commands. You should provide an id in your scripts.`);
@@ -181,15 +181,14 @@ function checkAuthorization(context, next, done) {
 	}
 
 
-	var emailAddress;
-
+	let emailAddress;
 	if (context.response.message.user.profile) {
 		emailAddress = context.response.message.user.profile.email;
 	}
 
-	var unauthorized = false;
-	var authorizedReader = false;
-	var authorizedPower = false;
+	let unauthorized = false;
+	let authorizedReader = false;
+	let authorizedPower = false;
 	isAuthorizedReader(emailAddress).then(authReader => {
 		authorizedReader = authReader;
 		return isAuthorizedPowerUser(emailAddress);
@@ -249,9 +248,9 @@ function ldapSearch(query, filter) {
 	if (bot) {
 		bot.logger.debug(`${TAG}: ldapSearch(${query}, ${filter})`);
 	}
-	var promise = new Promise((resolve, reject) => {
-		var entryFound = false;
-		var opts = {
+	let promise = new Promise((resolve, reject) => {
+		let entryFound = false;
+		let opts = {
 			filter: filter,
 			scope: 'sub'
 		};
@@ -286,7 +285,7 @@ function ldapSearch(query, filter) {
 }
 
 function getDistinguishedName(email) {
-	var filter = `(${env.ldapEmailField}=${email})`;
+	let filter = `(${env.ldapEmailField}=${email})`;
 	return ldapSearch(env.ldapOrgRoot, filter).then(entry => {
 		if (entry === null) {
 			return Promise.resolve(null);
@@ -301,7 +300,7 @@ function isMemberOfGroup(email, group) {
 		if (dn === null) {
 			return Promise.resolve(false);
 		} else {
-			var filter = `(${env.ldapGroupMembershipField}=${dn})`;
+			let filter = `(${env.ldapGroupMembershipField}=${dn})`;
 			return ldapSearch(group, filter);
 		}
 	}).catch(err => {
@@ -314,19 +313,19 @@ function isMemberOfAGroup(email, groupArray) {
 	if (bot) {
 		bot.logger.debug(`${TAG}: Test if ${email} is a member of groupArray:` + JSON.stringify(groupArray));
 	}
-	var promise = new Promise((resolve, reject) => {
+	let promise = new Promise((resolve, reject) => {
 		if (!Array.isArray(groupArray)) {
 			resolve(false);
 		} else {
 			if (groupArray.length <= 0) {
 				resolve(false);
 			} else {
-				var promiseArray = [];
+				let promiseArray = [];
 				groupArray.forEach((group, index) => {
 					promiseArray.push(isMemberOfGroup(email, group));
 				});
 				Promise.all(promiseArray).then(values => {
-					var result = false;
+					let result = false;
 					values.forEach((val, idx) => {
 						if (val !== null && val !== false) {
 							result = true;
@@ -348,7 +347,7 @@ function isMemberOfAGroup(email, groupArray) {
 };
 
 function isAuthorizedReader(email) {
-	var promise = new Promise((resolve, reject) => {
+	let promise = new Promise((resolve, reject) => {
 		if (READER_EMAILS.indexOf(email) !== -1) {
 			resolve(true);
 		} else {
@@ -368,7 +367,7 @@ function isAuthorizedReader(email) {
 }
 
 function isAuthorizedPowerUser(email) {
-	var promise = new Promise((resolve, reject) => {
+	let promise = new Promise((resolve, reject) => {
 		if (POWER_EMAILS.indexOf(email) !== -1) {
 			resolve(true);
 		} else {
