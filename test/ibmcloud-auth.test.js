@@ -52,7 +52,7 @@ describe('Test IBM Cloud auth function', function() {
 			ibmcloudAuth.ldapInit().then(connected => {
 				done();
 			});
-			var bot = {
+			let bot = {
 				logger: {
 					debug: () => {},
 					info: () => {},
@@ -231,7 +231,7 @@ describe('Test IBM Cloud auth function', function() {
 			room.robot.on('command.unkown', function(){
 				done();
 			});
-			var res = { message: {user: {id: 'mimiron'}}, response: room };
+			let res = { message: {user: {id: 'mimiron'}}, response: room };
 			setTimeout(() => {
 				room.robot.emit('ibmcloud-auth-to-nlc', res, { emitTarget: 'command.unkown' });
 			}, 600);
@@ -242,18 +242,18 @@ describe('Test IBM Cloud auth function', function() {
 			room.robot.on('bluemix.app.list', function(){
 				done();
 			});
-			var res = { message: {user: {id: 'mimiron', profile: {email: 'myReaderUser@us.ibm.com'}}}, response: room };
+			let res = { message: {user: {id: 'mimiron', profile: {email: 'myReaderUser@us.ibm.com'}}}, response: room };
 			setTimeout(() => {
 				room.robot.emit('ibmcloud-auth-to-nlc', res, { emitTarget: 'bluemix.app.list' });
 			}, 600);
 		}).timeout(10000);
 
 		it('should test emit - reader user is denied', function(done){
-			var replyFn = function(msg){
+			let replyFn = function(msg){
 				expect(msg).to.be.eql('I\'m sorry, but you don\'t have access to that command');
 				done();
 			};
-			var res = { message: {user: {id: 'mimiron', profile: {email: 'myReaderUser@us.ibm.com'}}}, response: room, reply: replyFn };
+			let res = { message: {user: {id: 'mimiron', profile: {email: 'myReaderUser@us.ibm.com'}}}, response: room, reply: replyFn };
 			setTimeout(() => {
 				room.robot.emit('ibmcloud-auth-to-nlc', res, { emitTarget: 'bluemix.app.start' });
 			}, 600);
@@ -264,14 +264,14 @@ describe('Test IBM Cloud auth function', function() {
 			room.robot.on('bluemix.app.start', function(){
 				done();
 			});
-			var res = { message: {user: {id: 'mimiron', profile: {email: 'myPowerUser@us.ibm.com'}}}, response: room };
+			let res = { message: {user: {id: 'mimiron', profile: {email: 'myPowerUser@us.ibm.com'}}}, response: room };
 			setTimeout(() => {
 				room.robot.emit('ibmcloud-auth-to-nlc', res, { emitTarget: 'bluemix.app.start' });
 			}, 600);
 		}).timeout(10000);
 
 		it('should test emit - connamdID is undefined', function(done){
-			var res = { message: {user: {id: 'mimiron', profile: {email: 'myPowerUser@us.ibm.com'}}}, response: room };
+			let res = { message: {user: {id: 'mimiron', profile: {email: 'myPowerUser@us.ibm.com'}}}, response: room };
 			room.robot.emit('ibmcloud-auth-to-nlc', res, {});
 			// Test pass if no errors are thrown.
 			done();
