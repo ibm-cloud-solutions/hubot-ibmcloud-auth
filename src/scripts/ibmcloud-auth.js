@@ -76,6 +76,10 @@ const READER_COMMANDS = [
 	'openwhisk.namespace.list',
 	'openwhisk.namespace.get',
 	'openwhisk.namespace.set',
+	'redis.nottls',
+	'redis.monitor.nottls',
+	'redis.monitor.cancel',
+	'redis.slowlog',
 	'twitter.tweet.list'
 ];
 
@@ -107,6 +111,8 @@ const POWER_COMMANDS = [
 	'objectstorage.retrieve.object',
 	'objectstorage.search.object',
 	'openwhisk.action.invoke',
+	'redis.delete.nottls',
+	'redis.delete.key',
 	'twitter.monitoring.enable',
 	'twitter.monitoring.disable',
 	'twitter.tweet.edit'
