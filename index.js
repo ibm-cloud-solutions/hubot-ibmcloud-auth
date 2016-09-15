@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 
 module.exports = (robot, scripts) => {
-	robot.logger.info('Executing primary boot subroutine...');
+	robot.logger.info('Executing primary boot subroutine [hubot-ibmcloud-auth]...');
 	const scriptsPath = path.resolve(__dirname, 'src', 'scripts');
 	fs.access(scriptsPath, fs.R_OK, (err) => {
 		if (!err) {
