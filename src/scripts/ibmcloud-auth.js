@@ -199,7 +199,7 @@ function SSOInit() {
 			user.groups = req.user.groups;
 			// user._user = req.user;
 			auth_sessions[req.query.state] = undefined;
-			res.send('Authenticate succeeded! You can close this window now.');
+			res.send('Authentication succeeded! You can close this window now.');
 		});
 
 		bot.router.use(app);
@@ -339,12 +339,17 @@ function checkAuthorization(context, next, done) {
 	}).then(result => {
 		// console.log('unauthorized=' + unauthorized + ' msg=' + msg);
 		if (result.unauthorized) {
-			if (bot) {
-				bot.logger.info(`${TAG}: User ${emailAddress} is not authorized to use command ${commandId}.`);
-			}
-			context.response.reply(i18n.__('no.access'));
 			if (result.msg) {
-				context.response.reply(result.msg);
+				// send private message to user
+				bot.messageRoom(context.response.message.user.id, result.msg);
+				// context.response.reply('A login link has been sent to you via direct message. Please check.');
+				context.response.reply(`${i18n.__('no.access')}  ${i18n.__('login.url')}`);
+				// context.response.reply(i18n.__('login.url'));
+			} else {
+				if (bot) {
+					bot.logger.info(`${TAG}: User ${emailAddress} is not authorized to use command ${commandId}.`);
+				}
+				context.response.reply(i18n.__('no.access'));
 			}
 			done();
 		} else {
