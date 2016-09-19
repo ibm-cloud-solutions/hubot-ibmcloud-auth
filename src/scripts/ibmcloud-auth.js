@@ -15,6 +15,8 @@
 //   HUBOT_IBMCLOUD_LDAP_POWERUSERS_GROUP_DN_LIST=<semi-colon separated list of LDAP group distinguished names -- no spaces!>
 //   HUBOT_IBMCLOUD_LDAP_READERUSERS_GROUP_DN_LIST=<semi-colon separated list of LDAP group distinguished names -- no spaces!>
 //   HUBOT_IBMCLOUD_AUTHENTICATION_DISABLED=<only if desired, disables authentication and authorization if true)>
+//   HUBOT_IBMCLOUD_SSO=<enalbe using Bluemix SSO service for authentication and authorization if true>
+//   HUBOT_URL=<URL to Hubot instance>
 //
 /*
 * Licensed Materials - Property of IBM
@@ -140,6 +142,14 @@ let auth_sessions = {};
 
 function SSOInit() {
 	if (env.cloudSSO) {
+		let services = JSON.parse(process.env.VCAP_SERVICES);
+		let ssoConfig = services.SingleSignOn[0];
+		let client_id = ssoConfig.credentials.clientId;
+		let client_secret = ssoConfig.credentials.secret;
+		let authorization_url = ssoConfig.credentials.authorizationEndpointUrl;
+		let token_url = ssoConfig.credentials.tokenEndpointUrl;
+		let issuer_id = ssoConfig.credentials.issuerIdentifier;
+		let callback_url = env.hubotURL + '/auth/sso/callback';
 		const express = require('express');
 		const cookieParser = require('cookie-parser');
 		const session = require('express-session');
@@ -153,12 +163,7 @@ function SSOInit() {
 			app.use(passport.session());
 			app.use(app.router);
 		});
-		let client_id = '7CWkMRqXUZ';
-		let client_secret = 'M34JvfL5cH';
-		let authorization_url = 'https://bot-sso-bsag41zm3m-cl12.iam.ibmcloud.com/idaas/oidc/endpoint/default/authorize';
-		let token_url = 'https://bot-sso-bsag41zm3m-cl12.iam.ibmcloud.com/idaas/oidc/endpoint/default/token';
-		let issuer_id = 'bot-sso-bsag41zm3m-cl12.iam.ibmcloud.com';
-		let callback_url = process.env.HUBOT_URL + '/auth/sso/callback';
+
 		let strategyParam = {
 			authorizationURL: authorization_url,
 			tokenURL: token_url,
@@ -188,8 +193,6 @@ function SSOInit() {
 
 		app.get('/auth/sso/callback',	passport.authenticate('openidconnect', { session: false, accessType: 'offline', approvalPrompt: 'force' }), function(req, res) {
 			let auth_session = auth_sessions[req.query.state];
-			// console.log('auth_sessions');
-			// console.dir(auth_sessions);
 			if (!req.query.state || !auth_session) {
 				return res.send(401, 'Not Authorized!');
 			}
@@ -197,9 +200,10 @@ function SSOInit() {
 			user.access_token = req.user.accessToken;
 			user.refresh_token = req.user.refreshToken;
 			user.groups = req.user.groups;
-			// user._user = req.user;
+			let room = auth_session.room;
+			let team_id = auth_session.team_id;
 			auth_sessions[req.query.state] = undefined;
-			res.send('Authentication succeeded! You can close this window now.');
+			res.redirect(`slack://channel?id=${room}&team=${team_id}`);
 		});
 
 		bot.router.use(app);
@@ -209,28 +213,27 @@ function SSOInit() {
 			user.access_token = null;
 			user.refresh_token = null;
 			user.groups = null;
-			msg.reply('You have been logged out!');
+			msg.reply(i18n.__('logout'));
 		});
 	}
 }
 
-function checkSSO(emailAddress, role) {
+function checkSSO(context, role) {
+	let emailAddress = context.response.message.user.profile.email;
 	return new Promise((resolve, reject) => {
 		if (env.cloudSSO) {
 			let user = findUserInBrain(emailAddress);
-			// user doesn't exist in brain, force login flow
-			if (!user.access_token) {
+			if (!user.access_token) { // user doesn't exist in brain, force login flow
 				let sid = uuid.v4();
-				auth_sessions[sid] = {user_email: emailAddress};
-				let msg = `Please log in first: ${process.env.HUBOT_URL}/bluemix/auth?token=${sid}`;
+				auth_sessions[sid] = {user_email: emailAddress, room: context.response.message.user.room, team_id: context.response.message.user.team_id};
+				let msg = `Please log in first: ${env.hubotURL}/bluemix/auth?token=${sid}`;
 				resolve({unauthorized: true, msg: msg});
-			} else {
+			} else { // user has already logged in. Check authorization.
 				if (bot) {
 					bot.logger.info(`${TAG}: User authenticated as: ${JSON.stringify(user)}`);
 				}
 				if (user.groups) {
 					for (let i = 0; i < user.groups.length; i++) {
-						console.log('group=' + user.groups[i] + ' role=' + role);
 						if (user.groups[i] === 'admin') {
 							if (bot) {
 								bot.logger.debug(`${TAG}: User authorized as: admin`);
@@ -319,7 +322,6 @@ function checkAuthorization(context, next, done) {
 		emailAddress = context.response.message.user.profile.email;
 	}
 
-	// let unauthorized = false;
 	let authorizedReader = false;
 	let authorizedPower = false;
 	isAuthorizedReader(emailAddress).then(authReader => {
@@ -328,23 +330,18 @@ function checkAuthorization(context, next, done) {
 	}).then(authPower => {
 		authorizedPower = authPower;
 		if (isReaderCommand(commandId) && (!authorizedReader && !authorizedPower)) {
-			// unauthorized = true;
-			return checkSSO(emailAddress, 'reader');
+			return checkSSO(context, 'reader');
 		} else if (isPowerCommand(commandId) && !authorizedPower) {
-			// unauthorized = true;
-			return checkSSO(emailAddress, 'admin');
+			return checkSSO(context, 'admin');
 		} else {
 			return Promise.resolve({unauthorized: false});
 		}
 	}).then(result => {
-		// console.log('unauthorized=' + unauthorized + ' msg=' + msg);
 		if (result.unauthorized) {
 			if (result.msg) {
 				// send private message to user
 				bot.messageRoom(context.response.message.user.id, result.msg);
-				// context.response.reply('A login link has been sent to you via direct message. Please check.');
 				context.response.reply(`${i18n.__('no.access')}  ${i18n.__('login.url')}`);
-				// context.response.reply(i18n.__('login.url'));
 			} else {
 				if (bot) {
 					bot.logger.info(`${TAG}: User ${emailAddress} is not authorized to use command ${commandId}.`);
@@ -357,6 +354,7 @@ function checkAuthorization(context, next, done) {
 		}
 	})
 	.catch(err => {
+		console.log(err);
 		reportError(`${TAG}: An error occurred during authorization checks:`, err);
 		let msg = i18n.__('no.access');
 		context.response.reply(msg);
