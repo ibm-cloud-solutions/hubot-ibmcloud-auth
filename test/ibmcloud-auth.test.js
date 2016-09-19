@@ -250,7 +250,7 @@ describe('Test IBM Cloud auth function', function() {
 
 		it('should test emit - reader user is denied', function(done){
 			let replyFn = function(msg){
-				expect(msg).to.be.eql('I\'m sorry, but you don\'t have access to that command');
+				expect(msg).to.be.eql('I\'m sorry, but you don\'t have access to that command.');
 				done();
 			};
 			let res = { message: {user: {id: 'mimiron', profile: {email: 'myReaderUser@us.ibm.com'}}}, response: room, reply: replyFn };
