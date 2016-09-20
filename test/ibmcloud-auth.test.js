@@ -338,10 +338,6 @@ describe('Test IBM Cloud auth function', function() {
 	context('Test findUserInBrain method', function(){
 		before(function() {
 			ibmcloudAuthAPI.__get__('bot').brain = new Map();
-			let tokens = {
-				'toddstsm@us.ibm.com': {access_token: 'xxxx', groups: ['reader']}
-			};
-			ibmcloudAuthAPI.__get__('bot').brain.set('tokens', tokens);
 		});
 		it('findUserInBrain - user doesn\'t exist', function(done) {
 			let user = ibmcloudAuth.findUserInBrain('todd@us.ibm.com');
@@ -350,6 +346,10 @@ describe('Test IBM Cloud auth function', function() {
 		});
 
 		it('findUserInBrain - user exists', function(done) {
+			let tokens = {
+				'toddstsm@us.ibm.com': {access_token: 'xxxx', groups: ['reader']}
+			};
+			ibmcloudAuthAPI.__get__('bot').brain.set('tokens', tokens);
 			let user = ibmcloudAuth.findUserInBrain('toddstsm@us.ibm.com');
 			expect(user).to.not.be.empty;
 			done();
@@ -377,7 +377,8 @@ describe('Test IBM Cloud auth function', function() {
 			fakeContext.response.message.user.profile.email = 'toddnotloggedin@us.ibm.com';
 			ibmcloudAuth.checkSSO(fakeContext).then(result => {
 				expect(result.unauthorized).to.be.true;
-				expect(result.msg).to.not.be.undefined;
+				console.log(result.msg);
+				expect(result.msg).match(/^Please log in first: https:\/\/localhost:8080\/bluemix\/auth\?token=/);
 				done();
 			});
 		}).timeout(10000);
