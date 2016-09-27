@@ -108,6 +108,7 @@ const POWER_COMMANDS = [
 	'github.deploy',
 	'nlc.train',
 	'nlc.auto.approve',
+	'nlc.training.ui',
 	'objectstorage.retrieve.object',
 	'objectstorage.search.object',
 	'openwhisk.action.invoke',
