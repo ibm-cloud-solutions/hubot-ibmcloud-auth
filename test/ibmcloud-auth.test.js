@@ -23,6 +23,8 @@ ibmcloudAuth.isAuthorizedReader = ibmcloudAuthAPI.__get__('isAuthorizedReader');
 ibmcloudAuth.isAuthorizedPowerUser = ibmcloudAuthAPI.__get__('isAuthorizedPowerUser');
 ibmcloudAuth.isReaderCommand = ibmcloudAuthAPI.__get__('isReaderCommand');
 ibmcloudAuth.isPowerCommand = ibmcloudAuthAPI.__get__('isPowerCommand');
+ibmcloudAuth.checkSSO = ibmcloudAuthAPI.__get__('checkSSO');
+ibmcloudAuth.findUserInBrain = ibmcloudAuthAPI.__get__('findUserInBrain');
 
 // Passing arrow functions to mocha is discouraged: https://mochajs.org/#arrow-functions
 // return promises from mocha tests rather than calling done() - http://tobyho.com/2015/12/16/mocha-with-promises/
@@ -250,7 +252,7 @@ describe('Test IBM Cloud auth function', function() {
 
 		it('should test emit - reader user is denied', function(done){
 			let replyFn = function(msg){
-				expect(msg).to.be.eql('I\'m sorry, but you don\'t have access to that command');
+				expect(msg).to.be.eql('I\'m sorry, but you don\'t have access to that command.');
 				done();
 			};
 			let res = { message: {user: {id: 'mimiron', profile: {email: 'myReaderUser@us.ibm.com'}}}, response: room, reply: replyFn };
@@ -332,4 +334,109 @@ describe('Test IBM Cloud auth function', function() {
 			expect(ibmcloudAuth.isPowerCommand('bluemix.app.remove')).to.be.true;
 		}).timeout(10000);
 	});
+
+	context('Test findUserInBrain method', function(){
+		before(function() {
+			ibmcloudAuthAPI.__get__('bot').brain = new Map();
+		});
+		it('findUserInBrain - user doesn\'t exist', function(done) {
+			let user = ibmcloudAuth.findUserInBrain('todd@us.ibm.com');
+			expect(user).to.be.empty;
+			done();
+		});
+
+		it('findUserInBrain - user exists', function(done) {
+			let tokens = {
+				'toddstsm@us.ibm.com': {access_token: 'xxxx', groups: ['reader']}
+			};
+			ibmcloudAuthAPI.__get__('bot').brain.set('tokens', tokens);
+			let user = ibmcloudAuth.findUserInBrain('toddstsm@us.ibm.com');
+			expect(user).to.not.be.empty;
+			done();
+		});
+	});
+
+	context('Test checkSSO method', function() {
+		before(function() {
+			process.env.VCAP_SERVICES = '{\"SingleSignOn\":[{\"credentials\":{\"secret\":\"M34JvfL5cH\",\"tokenEndpointUrl\":\"https:\/\/bot-sso-bsag41zm3m-cl12.iam.ibmcloud.com\/idaas\/oidc\/endpoint\/default\/token\",\"authorizationEndpointUrl\":\"https:\/\/bot-sso-bsag41zm3m-cl12.iam.ibmcloud.com\/idaas\/oidc\/endpoint\/default\/authorize\",\"issuerIdentifier\":\"bot-sso-bsag41zm3m-cl12.iam.ibmcloud.com\",\"clientId\":\"7CWkMRqXUZ\",\"serverSupportedScope\":[\"openid\"]},\"syslog_drain_url\":null,\"label\":\"SingleSignOn\",\"provider\":null,\"plan\":\"professional\",\"name\":\"bot-sso\",\"tags\":[\"security\",\"ibm_created\",\"ibm_dedicated_public\"]}]}';
+			ibmcloudAuthAPI.__get__('env').cloudSSO = true;
+			ibmcloudAuthAPI.__get__('bot').brain = new Map();
+			ibmcloudAuthAPI.__get__('env').hubotURL = 'https://localhost:8080';
+			let tokens = {
+				'toddreader@us.ibm.com': {access_token: 'xxxx', groups: ['reader']},
+				'toddadmin@us.ibm.com': {access_token: 'xxxx', groups: ['admin']},
+				'toddnoaccess@us.ibm.com': {access_token: 'xxxx', groups: ['allUsers']}
+			};
+			ibmcloudAuthAPI.__get__('bot').brain.set('tokens', tokens);
+		});
+		after(function() {
+			process.env.VCAP_SERVICES = undefined;
+		});
+
+		it('checkSSO - force login flow', function(done) {
+			fakeContext.response.message.user.profile.email = 'toddnotloggedin@us.ibm.com';
+			ibmcloudAuth.checkSSO(fakeContext).then(result => {
+				expect(result.unauthorized).to.be.true;
+				console.log(result.msg);
+				expect(result.msg).match(/^Please log in first: https:\/\/localhost:8080\/bluemix\/auth\?token=/);
+				done();
+			});
+		}).timeout(10000);
+
+		it('checkSSO - user has already logged in flow', function(done) {
+			fakeContext.response.message.user.profile.email = 'toddreader@us.ibm.com';
+			ibmcloudAuth.checkSSO(fakeContext, 'reader').then(result => {
+				expect(result.unauthorized).to.be.false;
+				expect(result.msg).to.be.undefined;
+				done();
+			});
+		}).timeout(10000);
+
+		it('checkSSO - user(reader) issue admin command', function(done) {
+			fakeContext.response.message.user.profile.email = 'toddreader@us.ibm.com';
+			ibmcloudAuth.checkSSO(fakeContext, 'admin').then(result => {
+				expect(result.unauthorized).to.be.true;
+				expect(result.msg).to.be.undefined;
+				done();
+			});
+		}).timeout(10000);
+
+		it('checkSSO - user(admin) issue reader command', function(done) {
+			fakeContext.response.message.user.profile.email = 'toddadmin@us.ibm.com';
+			ibmcloudAuth.checkSSO(fakeContext, 'reader').then(result => {
+				expect(result.unauthorized).to.be.false;
+				expect(result.msg).to.be.undefined;
+				done();
+			});
+		}).timeout(10000);
+
+		it('checkSSO - user(admin) issue admin command', function(done) {
+			fakeContext.response.message.user.profile.email = 'toddadmin@us.ibm.com';
+			ibmcloudAuth.checkSSO(fakeContext, 'admin').then(result => {
+				expect(result.unauthorized).to.be.false;
+				expect(result.msg).to.be.undefined;
+				done();
+			});
+		}).timeout(10000);
+
+		it('checkSSO - user(no access) issue reader command', function(done) {
+			fakeContext.response.message.user.profile.email = 'toddnoaccess@us.ibm.com';
+			ibmcloudAuth.checkSSO(fakeContext, 'reader').then(result => {
+				expect(result.unauthorized).to.be.true;
+				expect(result.msg).to.be.undefined;
+				done();
+			});
+		}).timeout(10000);
+
+		it('checkSSO - user(no access) issue admin command', function(done) {
+			fakeContext.response.message.user.profile.email = 'toddnoaccess@us.ibm.com';
+			ibmcloudAuth.checkSSO(fakeContext, 'admin').then(result => {
+				expect(result.unauthorized).to.be.true;
+				expect(result.msg).to.be.undefined;
+				done();
+			});
+		}).timeout(10000);
+	});
+
+
 });

@@ -15,6 +15,8 @@
 //   HUBOT_IBMCLOUD_LDAP_POWERUSERS_GROUP_DN_LIST=<semi-colon separated list of LDAP group distinguished names -- no spaces!>
 //   HUBOT_IBMCLOUD_LDAP_READERUSERS_GROUP_DN_LIST=<semi-colon separated list of LDAP group distinguished names -- no spaces!>
 //   HUBOT_IBMCLOUD_AUTHENTICATION_DISABLED=<only if desired, disables authentication and authorization if true)>
+//   HUBOT_IBMCLOUD_SSO=<enalbe using Bluemix SSO service for authentication and authorization if true>
+//   HUBOT_URL=<URL to Hubot instance>
 //
 /*
 * Licensed Materials - Property of IBM
@@ -26,6 +28,7 @@
 
 const ldap = require('ldapjs');
 const path = require('path');
+const uuid = require('node-uuid');
 const TAG = path.basename(__filename);
 const env = require(path.resolve(__dirname, '..', 'lib', 'env'));
 
@@ -136,6 +139,134 @@ if (env.readerUsers) {
 	READER_EMAILS = env.readerUsers.split(',');
 }
 
+let auth_sessions = {};
+
+function SSOInit() {
+	if (env.cloudSSO) {
+		let services = JSON.parse(process.env.VCAP_SERVICES);
+		let ssoConfig = services.SingleSignOn[0];
+		let client_id = ssoConfig.credentials.clientId;
+		let client_secret = ssoConfig.credentials.secret;
+		let authorization_url = ssoConfig.credentials.authorizationEndpointUrl;
+		let token_url = ssoConfig.credentials.tokenEndpointUrl;
+		let issuer_id = ssoConfig.credentials.issuerIdentifier;
+		let callback_url = env.hubotURL + '/auth/sso/callback';
+		const express = require('express');
+		const cookieParser = require('cookie-parser');
+		const session = require('express-session');
+		const passport = require('passport');
+		const OpenIDConnectStrategy = require('passport-idaas-openidconnect').IDaaSOIDCStrategy;
+		let app = express();
+		app.configure(function() {
+			app.use(cookieParser());
+			app.use(session({resave: 'true', saveUninitialized: 'true', secret: 'keyboard cat'}));
+			app.use(passport.initialize());
+			app.use(passport.session());
+			app.use(app.router);
+		});
+
+		let strategyParam = {
+			authorizationURL: authorization_url,
+			tokenURL: token_url,
+			clientID: client_id,
+			scope: 'openid',
+			response_type: 'code',
+			clientSecret: client_secret,
+			callbackURL: callback_url,
+			skipUserProfile: true,
+			issuer: issuer_id
+		};
+
+		let Strategy = new OpenIDConnectStrategy(strategyParam,	function(accessToken, refreshToken, profile, done) {
+			process.nextTick(function() {
+				profile.accessToken = accessToken;
+				profile.refreshToken = refreshToken;
+				done(null, profile);
+			});
+		});
+
+		passport.use(Strategy);
+
+		app.get('/bluemix/auth', function(req, res, next) {
+			let token = req.query.token;
+			passport.authenticate('openidconnect', { session: false, state: token, accessType: 'offline', approvalPrompt: 'force' })(req, res, next);
+		});
+
+		app.get('/auth/sso/callback',	passport.authenticate('openidconnect', { session: false, accessType: 'offline', approvalPrompt: 'force' }), function(req, res) {
+			let auth_session = auth_sessions[req.query.state];
+			if (!req.query.state || !auth_session) {
+				return res.send(401, 'Not Authorized!');
+			}
+			let user = findUserInBrain(auth_session.user_email);
+			user.access_token = req.user.accessToken;
+			user.refresh_token = req.user.refreshToken;
+			user.groups = req.user.groups;
+			let room = auth_session.room;
+			let team_id = auth_session.team_id;
+			auth_sessions[req.query.state] = undefined;
+			res.redirect(`slack://channel?id=${room}&team=${team_id}`);
+		});
+
+		bot.router.use(app);
+
+		bot.respond(/log out|logout/i, function(msg) {
+			let user = findUserInBrain(msg.message.user.profile.email);
+			user.access_token = null;
+			user.refresh_token = null;
+			user.groups = null;
+			msg.reply(i18n.__('logout'));
+		});
+	}
+}
+
+function checkSSO(context, role) {
+	let emailAddress = context.response.message.user.profile.email;
+	return new Promise((resolve, reject) => {
+		if (env.cloudSSO) {
+			let user = findUserInBrain(emailAddress);
+			if (!user.access_token) { // user doesn't exist in brain, force login flow
+				let sid = uuid.v4();
+				auth_sessions[sid] = {user_email: emailAddress, room: context.response.message.user.room, team_id: context.response.message.user.team_id};
+				let msg = `Please log in first: ${env.hubotURL}/bluemix/auth?token=${sid}`;
+				resolve({unauthorized: true, msg: msg});
+			} else { // user has already logged in. Check authorization.
+				if (bot) {
+					bot.logger.info(`${TAG}: User authenticated as: ${JSON.stringify(user)}`);
+				}
+				if (user.groups) {
+					for (let i = 0; i < user.groups.length; i++) {
+						if (user.groups[i] === 'admin') {
+							if (bot) {
+								bot.logger.debug(`${TAG}: User authorized as: admin`);
+							}
+							resolve({unauthorized: false});
+						} else if (user.groups[i] === role) {
+							if (bot) {
+								bot.logger.debug(`${TAG}: User authorized as: reader`);
+							}
+							resolve({unauthorized: false});
+						}
+					}
+				}
+			}
+		}
+		resolve({unauthorized: true});
+	});
+};
+
+function findUserInBrain(email) {
+	let tokens = bot.brain.get('tokens');
+	if (!tokens) {
+		tokens = bot.brain.set('tokens', {});
+	}
+	let user = tokens[email];
+	if (!user) {
+		tokens[email] = {};
+		user = tokens[email];
+	}
+	return user;
+};
+
 function ldapInit() {
 	let promise = new Promise((resolve, reject) => {
 		if (env.ldapServer && env.ldapPort && env.ldapBindUser && env.ldapBindPassword) {
@@ -187,13 +318,11 @@ function checkAuthorization(context, next, done) {
 		commandId = context.commandId || context.listener.options.id;
 	}
 
-
 	let emailAddress;
 	if (context.response.message.user.profile) {
 		emailAddress = context.response.message.user.profile.email;
 	}
 
-	let unauthorized = false;
 	let authorizedReader = false;
 	let authorizedPower = false;
 	isAuthorizedReader(emailAddress).then(authReader => {
@@ -202,23 +331,31 @@ function checkAuthorization(context, next, done) {
 	}).then(authPower => {
 		authorizedPower = authPower;
 		if (isReaderCommand(commandId) && (!authorizedReader && !authorizedPower)) {
-			unauthorized = true;
+			return checkSSO(context, 'reader');
 		} else if (isPowerCommand(commandId) && !authorizedPower) {
-			unauthorized = true;
+			return checkSSO(context, 'admin');
+		} else {
+			return Promise.resolve({unauthorized: false});
 		}
-
-		if (unauthorized) {
-			if (bot) {
-				bot.logger.info(`${TAG}: User ${emailAddress} is not authorized to use command ${commandId}.`);
+	}).then(result => {
+		if (result.unauthorized) {
+			if (result.msg) {
+				// send private message to user
+				bot.messageRoom(context.response.message.user.id, result.msg);
+				context.response.reply(`${i18n.__('no.access')}  ${i18n.__('login.url')}`);
+			} else {
+				if (bot) {
+					bot.logger.info(`${TAG}: User ${emailAddress} is not authorized to use command ${commandId}.`);
+				}
+				context.response.reply(i18n.__('no.access'));
 			}
-			let msg = i18n.__('no.access');
-			context.response.reply(msg);
 			done();
 		} else {
 			next();
 		}
 	})
 	.catch(err => {
+		console.log(err);
 		reportError(`${TAG}: An error occurred during authorization checks:`, err);
 		let msg = i18n.__('no.access');
 		context.response.reply(msg);
@@ -229,6 +366,7 @@ function checkAuthorization(context, next, done) {
 module.exports = function(robot) {
 	bot = robot;
 	ldapInit().then(connected => {
+		SSOInit();
 		robot.listenerMiddleware(checkAuthorization);
 		robot.on('ibmcloud-auth-to-nlc', (res, authEmitParams) => {
 			checkAuthorization({response: res, commandId: authEmitParams.emitTarget}, function next(){

@@ -1,3 +1,5 @@
 {
-  "no.access": "I'm sorry, but you don't have access to that command"
+  "no.access": "I'm sorry, but you don't have access to that command.",
+  "login.url": "A link has been sent to you via private message. Please click the link and log in.",
+  "logout": "You have been logged out successfully."
 }

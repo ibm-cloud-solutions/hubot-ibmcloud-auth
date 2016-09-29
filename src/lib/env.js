@@ -20,6 +20,8 @@ let HUBOT_IBMCLOUD_LDAP_GROUP_MEMBERSHIP_FIELD = process.env.HUBOT_IBMCLOUD_LDAP
 let HUBOT_IBMCLOUD_LDAP_POWERUSERS_GROUP_DN_LIST = process.env.HUBOT_IBMCLOUD_LDAP_POWERUSERS_GROUP_DN_LIST;
 let HUBOT_IBMCLOUD_LDAP_READERUSERS_GROUP_DN_LIST = process.env.HUBOT_IBMCLOUD_LDAP_READERUSERS_GROUP_DN_LIST;
 let HUBOT_IBMCLOUD_AUTHENTICATION_DISABLED = process.env.HUBOT_IBMCLOUD_AUTHENTICATION_DISABLED;
+let HUBOT_IBMCLOUD_SSO = process.env.HUBOT_IBMCLOUD_SSO;
+let HUBOT_URL = process.env.HUBOT_URL;
 
 if (_.isString(HUBOT_IBMCLOUD_POWERUSERS)) {
 	HUBOT_IBMCLOUD_POWERUSERS = HUBOT_IBMCLOUD_POWERUSERS.trim();
@@ -58,6 +60,19 @@ if (_.isString(HUBOT_IBMCLOUD_LDAP_READERUSERS_GROUP_DN_LIST)) {
 	HUBOT_IBMCLOUD_LDAP_READERUSERS_GROUP_DN_LIST = HUBOT_IBMCLOUD_LDAP_READERUSERS_GROUP_DN_LIST.trim();
 }
 
+if (HUBOT_IBMCLOUD_SSO) {
+	let services = JSON.parse(process.env.VCAP_SERVICES || '{}');
+	console.dir(services);
+	if (!services.SingleSignOn) {
+		console.warn('SingleSignOn auth enabled but SSO service instance is not bound!');
+		HUBOT_IBMCLOUD_SSO = false;
+	}
+	if (!HUBOT_URL) {
+		console.warn('SingleSignOn auth enabled but HUBOT_URL is not set!');
+		HUBOT_IBMCLOUD_SSO = false;
+	}
+}
+
 const settings = {
 	powerUsers: HUBOT_IBMCLOUD_POWERUSERS,
 	readerUsers: HUBOT_IBMCLOUD_READERUSERS,
@@ -71,7 +86,9 @@ const settings = {
 	ldapOrgRoot: HUBOT_IBMCLOUD_LDAP_ORG_ROOT,
 	ldapEmailField: HUBOT_IBMCLOUD_LDAP_EMAIL_FIELD,
 	ldapGroupMembershipField: HUBOT_IBMCLOUD_LDAP_GROUP_MEMBERSHIP_FIELD,
-	authenticationDisabled: HUBOT_IBMCLOUD_AUTHENTICATION_DISABLED
+	authenticationDisabled: HUBOT_IBMCLOUD_AUTHENTICATION_DISABLED,
+	cloudSSO: HUBOT_IBMCLOUD_SSO,
+	hubotURL: HUBOT_URL
 };
 
 module.exports = settings;
